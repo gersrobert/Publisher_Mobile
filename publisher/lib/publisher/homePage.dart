@@ -1,4 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_appauth/flutter_appauth.dart';
 
 class Profile extends StatelessWidget {
   final logoutAction;
@@ -6,6 +10,40 @@ class Profile extends StatelessWidget {
   final String picture;
 
   Profile(this.logoutAction, this.name, this.picture);
+
+  void test() async {
+    final FlutterAppAuth appAuth = FlutterAppAuth();
+
+    final AuthorizationTokenResponse result =
+        await appAuth.authorizeAndExchangeCode(
+      AuthorizationTokenRequest(
+        'UTZerACI9CyAKWFp98gfJh8XZOJE54fy',
+        'com.auth0.publisherflutter://login-callback',
+        issuer: 'https://a3cle-publisher.eu.auth0.com',
+        scopes: ['openid', 'profile', 'offline_access'],
+        additionalParameters: {'audience': 'https://publisher/api'},
+        // promptValues: ['login']
+      ),
+    );
+
+    final test1 = http.get(
+      Uri.http('localhost:10420', 'user/test1'),
+    );
+
+    final test2 = http.get(
+      Uri.http('localhost:10420', 'user/test2'),
+      headers: {'Authorization': 'Bearer ${result.accessToken}'},
+    );
+
+    log('TEST1___');
+    // log('${test1.statusCode}');
+    // log('${test2.statusCode}');
+    log('${result.accessToken}');
+  }
+  // log('TEST2___');
+  // log('${result.refreshToken}');
+  // log('TEST3___');
+  // log('${result.idToken}');
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +71,7 @@ class Profile extends StatelessWidget {
           },
           child: Text('Logout'),
         ),
+        ElevatedButton(onPressed: test, child: Text('test')),
       ],
     );
   }

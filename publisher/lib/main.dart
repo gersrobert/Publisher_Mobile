@@ -1,9 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'dart:developer';
 import 'package:publisher/auth/loginPage.dart';
 import 'package:publisher/publisher/homePage.dart';
 
@@ -19,7 +20,6 @@ const AUTH0_CLIENT_ID = 'UTZerACI9CyAKWFp98gfJh8XZOJE54fy';
 
 const AUTH0_REDIRECT_URI = 'com.auth0.publisherflutter://login-callback';
 const AUTH0_ISSUER = 'https://$AUTH0_DOMAIN';
-
 
 class Auth extends StatefulWidget {
   @override
@@ -56,7 +56,6 @@ class _AuthState extends State<Auth> {
   }
 
   Map<String, dynamic> parseIdToken(String idToken) {
-    log('$idToken test');
     final parts = idToken.split(r'.');
     assert(parts.length == 3);
 
@@ -92,8 +91,11 @@ class _AuthState extends State<Auth> {
           issuer: 'https://$AUTH0_DOMAIN',
           scopes: ['openid', 'profile', 'offline_access'],
           // promptValues: ['login']
+          // additionalParameters: {'audience': 'https://publisher/api'},
         ),
       );
+
+      log('${result.accessToken}');
 
       final idToken = parseIdToken(result.idToken);
       final profile = await getUserDetails(result.accessToken);
