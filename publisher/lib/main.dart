@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
-import 'auth/loginPage.dart';
-import 'publisher/homePage.dart';
+import 'package:provider/provider.dart';
+import 'package:publisher/auth/auth.dart';
+import 'package:publisher/publisher/homePage.dart';
+import 'package:publisher/publisher/profilePage.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(App());
 }
 
 class App extends StatelessWidget {
-  // This widget is the root of your application.
-  StatefulWidget _getInitPage() {
-    bool loggedIn = false;
-
-    if (loggedIn) {
-      return HomePage();
-    }
-    return LoginPage();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-    title: 'A3cle Publisher',
-    theme: ThemeData(
-      primarySwatch: Colors.pink,
-    ),
-    home: _getInitPage(),
+    Auth().renewRefreshToken();
+    return ChangeNotifierProvider(
+      create: (context) => Auth(),
+      child: MaterialApp(
+        title: 'Auth0 Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.pink,
+        ),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => Home(),
+          '/profile': (context) => Profile(),
+        },
+      ),
     );
   }
 }
