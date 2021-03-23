@@ -66,6 +66,9 @@ class _HomeState extends State<Home> {
         _articles.addAll(fetchedArticles.content);
       });
     } catch (e) {
+      log('test123');
+      log('$e');
+
       setState(() {
         _loading = false;
         _error = true;
@@ -93,7 +96,7 @@ class _HomeState extends State<Home> {
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Text("Error while loading photos, tap to try agin"),
+            child: Text("Error while loading photos, tap to try again"),
           ),
         ));
       }
@@ -117,7 +120,7 @@ class _HomeState extends State<Home> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Text("Error while loading photos, tap to try agin"),
+                    child: Text("Error while loading photos, tap to try again"),
                   ),
                 ));
               } else {
