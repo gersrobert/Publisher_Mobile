@@ -5,13 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:publisher/DTO/Article.dart';
 import 'package:publisher/DTO/Articles.dart';
 import 'package:publisher/customWidgets/pAppBar.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:publisher/publisher/detailedArticlePage.dart';
 
-class Home extends StatefulWidget {
+class ArticlesPage extends StatefulWidget {
   @override
-  _HomeState createState() => _HomeState();
+  _ArticlesPageState createState() => _ArticlesPageState();
 }
 
-class _HomeState extends State<Home> {
+class _ArticlesPageState extends State<ArticlesPage> {
   bool _hasMore = true;
   int _pageNumber;
   int _totalPages;
@@ -49,8 +51,8 @@ class _HomeState extends State<Home> {
     try {
       var queryParameters = {"page": "$_pageNumber"};
 
-      final response = await http
-          .get(Uri.http('localhost:10420', 'article', queryParameters));
+      final response = await http.get(Uri.http(
+          '${env['HOST']}:${env['PORT']}', 'article', queryParameters));
 
       if (response.statusCode != 200) {
         throw Exception('Invalid response code');
@@ -66,9 +68,6 @@ class _HomeState extends State<Home> {
         _articles.addAll(fetchedArticles.content);
       });
     } catch (e) {
-      log('test123');
-      log('$e');
-
       setState(() {
         _loading = false;
         _error = true;
@@ -96,7 +95,7 @@ class _HomeState extends State<Home> {
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Text("Error while loading photos, tap to try again"),
+            child: Text("Error while loading articles, tap to try again"),
           ),
         ));
       }
@@ -120,7 +119,8 @@ class _HomeState extends State<Home> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Text("Error while loading photos, tap to try again"),
+                    child:
+                        Text("Error while loading articles, tap to try again"),
                   ),
                 ));
               } else {
@@ -143,12 +143,18 @@ class _HomeState extends State<Home> {
               margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
               child: Column(
                 children: <Widget>[
-                  Container(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Container(
                       child: TextButton(
                         onPressed: () {
-                          log('${article.title}');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => DetailedArticlePage(
+                                id: article.id,
+                              ),
+                            ),
+                          );
                         },
                         style: ButtonStyle(
                           foregroundColor:
@@ -159,8 +165,6 @@ class _HomeState extends State<Home> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 24,
-                            // color: Colors.black,
-                            // fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),

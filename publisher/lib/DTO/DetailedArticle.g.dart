@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'Article.dart';
+part of 'DetailedArticle.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Article _$ArticleFromJson(Map<String, dynamic> json) {
-  return Article(
+DetailedArticle _$DetailedArticleFromJson(Map<String, dynamic> json) {
+  return DetailedArticle(
     json['id'] as String,
     json['title'] as String,
     json['createdAt'] as String,
@@ -20,10 +20,12 @@ Article _$ArticleFromJson(Map<String, dynamic> json) {
         ?.toList(),
     json['likeCount'] as int,
     json['liked'] as bool,
+    json['content'] as String,
   );
 }
 
-Map<String, dynamic> _$ArticleToJson(Article instance) => <String, dynamic>{
+Map<String, dynamic> _$DetailedArticleToJson(DetailedArticle instance) =>
+    <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
       'createdAt': instance.createdAt,
@@ -31,4 +33,5 @@ Map<String, dynamic> _$ArticleToJson(Article instance) => <String, dynamic>{
       'categories': instance.categories?.map((e) => e?.toJson())?.toList(),
       'likeCount': instance.likeCount,
       'liked': instance.liked,
+      'content': instance.content,
     };
