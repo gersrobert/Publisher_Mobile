@@ -23,7 +23,7 @@ class App extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.pink,
         ),
-        initialRoute: '/',
+        initialRoute: '/articles',
         routes: {
           '/articles': (context) => ArticlesPage(),
           '/profile': (context) => Profile(),

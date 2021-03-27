@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:publisher/DTO/Article.dart';
 import 'package:publisher/DTO/Articles.dart';
+import 'package:publisher/auth/auth.dart';
 import 'package:publisher/customWidgets/pAppBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publisher/publisher/detailedArticlePage.dart';
@@ -50,14 +52,22 @@ class _ArticlesPageState extends State<ArticlesPage> {
 
     try {
       var queryParameters = {"page": "$_pageNumber"};
+   
+      var headers;
+      if (Auth().getLoginStatus()) {
+        headers = {
+          HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
+        };
+      }
 
-      final response = await http.get(Uri.http(
-          '${env['HOST']}:${env['PORT']}', 'article', queryParameters));
-
+      final response = await http.get(
+        Uri.http('${env['HOST']}:${env['PORT']}', 'article', queryParameters),
+        headers: headers,
+      );
       if (response.statusCode != 200) {
         throw Exception('Invalid response code');
       }
-
+   
       Articles fetchedArticles = Articles.fromJson(jsonDecode(response.body));
 
       setState(() {

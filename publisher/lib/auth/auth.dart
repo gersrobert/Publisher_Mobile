@@ -48,13 +48,15 @@ class Auth extends ChangeNotifier {
           AUTH0_REDIRECT_URI,
           issuer: AUTH0_ISSUER,
           refreshToken: storedRefreshToken,
-          additionalParameters: {'audience': 'https://publisher/api'},
         ),
       );
 
       this._isLoggedIn = true;
       this._accessToken = response.accessToken;
       this._refreshToken = response.refreshToken;
+
+      log('${response.accessToken}');
+      log('${response.refreshToken}');
 
       _secureStorage.write(key: 'refresh_token', value: response.refreshToken);
       notifyListeners();
@@ -88,7 +90,7 @@ class Auth extends ChangeNotifier {
         AuthorizationTokenRequest(
           AUTH0_CLIENT_ID,
           AUTH0_REDIRECT_URI,
-          issuer: 'https://$AUTH0_DOMAIN',
+          issuer: AUTH0_ISSUER,
           scopes: ['openid', 'profile', 'offline_access'],
           additionalParameters: {'audience': 'https://publisher/api'},
         ),
@@ -98,7 +100,7 @@ class Auth extends ChangeNotifier {
       // this._idToken = parseIdToken(result.idToken) as String;
       this._refreshToken = result.refreshToken;
 
-      log('${result.idToken}');
+      log('${result.accessToken}');
       log('${result.refreshToken}');
 
       await _secureStorage.write(

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:publisher/customWidgets/pAppBar.dart';
 import 'package:publisher/auth/auth.dart';
@@ -31,6 +33,8 @@ class Profile extends StatelessWidget {
             SizedBox(height: 5.0),
             Consumer<Auth>(
               builder: (context, auth, child) {
+                log('${auth.getAccessToken()}');
+                log('${auth.getRefreshToken()}');
                 return Text('Refresh Token: ${auth.getRefreshToken()}');
               },
             ),
