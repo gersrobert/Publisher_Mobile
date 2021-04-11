@@ -52,7 +52,7 @@ class _ArticlesPageState extends State<ArticlesPage> {
 
     try {
       var queryParameters = {"page": "$_pageNumber"};
-   
+
       var headers;
       if (Auth().getLoginStatus()) {
         headers = {
@@ -65,9 +65,9 @@ class _ArticlesPageState extends State<ArticlesPage> {
         headers: headers,
       );
       if (response.statusCode != 200) {
-        throw Exception('Invalid response code');
+        throw Exception('Invalid response code ${response.statusCode}');
       }
-   
+
       Articles fetchedArticles = Articles.fromJson(jsonDecode(response.body));
 
       setState(() {
@@ -83,6 +83,47 @@ class _ArticlesPageState extends State<ArticlesPage> {
         _error = true;
       });
     }
+  }
+
+  void toggleLikeArticle(Article article) async {
+    var headers;
+    if (Auth().getLoginStatus()) {
+      headers = {
+        HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
+      };
+    } else {
+      return;
+    }
+
+    bool _liked = article.liked;
+    int _likeCount = article.likeCount;
+
+    if (article.liked) {
+      final response = await http.put(
+        Uri.http(
+            '${env['HOST']}:${env['PORT']}', 'article/${article.id}/unlike'),
+        headers: headers,
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Invalid response code ${response.statusCode}');
+      }
+      _liked = false;
+      _likeCount--;
+    } else {
+      final response = await http.put(
+        Uri.http('${env['HOST']}:${env['PORT']}', 'article/${article.id}/like'),
+        headers: headers,
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Invalid response code ${response.statusCode}');
+      }
+      _liked = true;
+      _likeCount++;
+    }
+    setState(() {
+      article.liked = _liked;
+      article.likeCount = _likeCount;
+    });
   }
 
   Widget getBody() {
@@ -157,6 +198,49 @@ class _ArticlesPageState extends State<ArticlesPage> {
                     alignment: Alignment.centerLeft,
                     child: Container(
                       child: TextButton(
+                        onLongPress: () {
+                          return showDialog<void>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10.0),
+                                  ),
+                                  side: BorderSide(
+                                    color: Colors.black,
+                                    width: 0.6,
+                                  ),
+                                ),
+                                insetPadding:
+                                    EdgeInsets.symmetric(horizontal: 5),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 10),
+                                content: TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            DetailedArticlePage(
+                                          id: article.id,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    primary: Colors.black,
+                                  ),
+                                  child: Text(
+                                    '${article.title}',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -205,9 +289,16 @@ class _ArticlesPageState extends State<ArticlesPage> {
                           Column(
                             children: [
                               Expanded(
-                                child: Icon(
-                                  Icons.favorite_border,
-                                  size: 40.0,
+                                child: TextButton(
+                                  onPressed: () => toggleLikeArticle(
+                                    article,
+                                  ),
+                                  child: Icon(
+                                    article.liked
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    size: 40.0,
+                                  ),
                                 ),
                               ),
                               Text('${article.likeCount} likes'),
