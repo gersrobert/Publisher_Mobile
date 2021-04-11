@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:publisher/DTO/DetailedArticle.dart';
 import 'package:publisher/customWidgets/pAppBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,6 +12,7 @@ class DetailedArticlePage extends StatefulWidget {
   final String id;
 
   DetailedArticlePage({Key key, @required this.id}) : super(key: key);
+
   @override
   _DetailedArticlePageState createState() => _DetailedArticlePageState();
 }
@@ -18,6 +21,9 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
   DetailedArticle _article;
   bool _error;
   bool _loading;
+  DateFormat dateFormat = new DateFormat("dd. MM. yyyy");
+  bool commentMode = false;
+  ScrollController _scrollController = new ScrollController();
 
   @override
   void initState() {
@@ -81,8 +87,171 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
         ));
       }
     } else {
-      return Text('${_article.title}');
+      return Container(
+          margin: EdgeInsets.only(left: 8, right: 8),
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.vertical,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                getHeader(),
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  child: Divider(thickness: 2),
+                ),
+                getContent(),
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  child: Divider(thickness: 2),
+                ),
+                getComments(),
+                Visibility(
+                    visible: !commentMode,
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          commentMode = true;
+                          _scrollController.animateTo(_scrollController.position.pixels + 100, curve: Curves.easeInOut, duration: const Duration(milliseconds: 300));
+                        });
+                      },
+                      child: Row(
+                        children: [Icon(Icons.add), Text("Add comment")],
+                      ),
+                    )),
+                Visibility(visible: commentMode, child: getCommentForm()),
+              ],
+            ),
+          ));
     }
     return Container();
+  }
+
+  Widget getHeader() {
+    return Container(
+        margin: EdgeInsets.only(top: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_article.title,
+                style: TextStyle(
+                  fontSize: 24,
+                )),
+            Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children:
+                          List.generate(_article.categories.length, (index) {
+                        return new Container(
+                            margin: EdgeInsets.only(
+                                left: 2, right: 2, top: 4, bottom: 8),
+                            child: Chip(
+                                label: Text(_article.categories[index].name)));
+                      }),
+                    ),
+                    Row(
+                      children: [
+                        Text("By "),
+                        Text(
+                            "${_article.author.firstName} ${_article.author.lastName}"),
+                        Text(" | "),
+                        Text(dateFormat
+                            .format(DateTime.parse(_article.createdAt)))
+                      ],
+                    ),
+                  ],
+                ),
+                Spacer(),
+                Column(
+                  children: [
+                    TextButton(
+                      // onPressed: () => toggleLikeArticle(
+                      //   _article,
+                      // ),
+                      child: Icon(
+                        _article.liked ? Icons.favorite : Icons.favorite_border,
+                        size: 40.0,
+                      ),
+                    ),
+                    Text('${_article.likeCount} likes'),
+                  ],
+                ),
+              ],
+            )
+          ],
+        ));
+  }
+
+  Widget getContent() {
+    return Container(
+      child: Text(_article.content, textAlign: TextAlign.justify),
+      margin: EdgeInsets.only(bottom: 16),
+    );
+  }
+
+  Widget getComments() {
+    return Container(
+        child: Column(children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(_article.comments.length, (index) {
+          return Container(
+              margin: EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        "${_article.comments[index].author.firstName} ${_article.comments[index].author.lastName}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(" | "),
+                      Text(dateFormat.format(
+                          DateTime.parse(_article.comments[index].createdAt))),
+                    ],
+                  ),
+                  Text(
+                    _article.comments[index].content,
+                  ),
+                ],
+              ));
+        }),
+      ),
+    ]));
+  }
+
+  Widget getCommentForm() {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16, left: 8, right: 8),
+      child: Column(
+        children: [
+          TextFormField(
+            decoration: const InputDecoration(hintText: "Say something"),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter some text';
+              }
+              return null;
+            },
+            maxLines: null,
+          ),
+          Row(
+            children: [
+              Spacer(),
+              TextButton(onPressed: () {
+                setState(() {
+                  commentMode = false;
+                });
+              }, child: Text("Cancel")),
+              TextButton(onPressed: () {}, child: Text("Send")),
+            ],
+          )
+        ],
+      ),
+    );
   }
 }

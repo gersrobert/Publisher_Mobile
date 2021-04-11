@@ -21,6 +21,10 @@ DetailedArticle _$DetailedArticleFromJson(Map<String, dynamic> json) {
     json['likeCount'] as int,
     json['liked'] as bool,
     json['content'] as String,
+    (json['comments'] as List)
+        ?.map((e) =>
+            e == null ? null : Comment.fromJson(e as Map<String, dynamic>))
+        ?.toList(),
   );
 }
 
@@ -34,4 +38,5 @@ Map<String, dynamic> _$DetailedArticleToJson(DetailedArticle instance) =>
       'likeCount': instance.likeCount,
       'liked': instance.liked,
       'content': instance.content,
+      'comments': instance.comments?.map((e) => e?.toJson())?.toList(),
     };
