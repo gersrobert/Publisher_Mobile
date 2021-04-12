@@ -5,8 +5,9 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:publisher/DTO/DetailedArticle.dart';
-import 'package:publisher/customWidgets/pAppBar.dart';
+import 'package:publisher/components/customAppBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:publisher/components/likeWidget.dart';
 
 class DetailedArticlePage extends StatefulWidget {
   final String id;
@@ -112,7 +113,10 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                       onPressed: () {
                         setState(() {
                           commentMode = true;
-                          _scrollController.animateTo(_scrollController.position.pixels + 100, curve: Curves.easeInOut, duration: const Duration(milliseconds: 300));
+                          _scrollController.animateTo(
+                              _scrollController.position.pixels + 100,
+                              curve: Curves.easeInOut,
+                              duration: const Duration(milliseconds: 300));
                         });
                       },
                       child: Row(
@@ -152,33 +156,27 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                                 label: Text(_article.categories[index].name)));
                       }),
                     ),
-                    Row(
-                      children: [
-                        Text("By "),
-                        Text(
-                            "${_article.author.firstName} ${_article.author.lastName}"),
-                        Text(" | "),
-                        Text(dateFormat
-                            .format(DateTime.parse(_article.createdAt)))
-                      ],
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Text("By "),
+                          Text(
+                              "${_article.author.firstName} ${_article.author.lastName}"),
+                          Text(" | "),
+                          Text(dateFormat
+                              .format(DateTime.parse(_article.createdAt)))
+                        ],
+                      ),
                     ),
                   ],
                 ),
                 Spacer(),
-                Column(
-                  children: [
-                    TextButton(
-                      // onPressed: () => toggleLikeArticle(
-                      //   _article,
-                      // ),
-                      child: Icon(
-                        _article.liked ? Icons.favorite : Icons.favorite_border,
-                        size: 40.0,
-                      ),
-                    ),
-                    Text('${_article.likeCount} likes'),
-                  ],
-                ),
+                LikeWidget(
+                  id: _article.id,
+                  liked: _article.liked,
+                  likeCount: _article.likeCount,
+                )
               ],
             )
           ],
@@ -242,11 +240,13 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
           Row(
             children: [
               Spacer(),
-              TextButton(onPressed: () {
-                setState(() {
-                  commentMode = false;
-                });
-              }, child: Text("Cancel")),
+              TextButton(
+                  onPressed: () {
+                    setState(() {
+                      commentMode = false;
+                    });
+                  },
+                  child: Text("Cancel")),
               TextButton(onPressed: () {}, child: Text("Send")),
             ],
           )

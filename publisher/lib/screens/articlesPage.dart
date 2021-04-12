@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:publisher/DTO/Article.dart';
 import 'package:publisher/DTO/Articles.dart';
 import 'package:publisher/auth/auth.dart';
-import 'package:publisher/customWidgets/pAppBar.dart';
+import 'package:publisher/components/customAppBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:publisher/publisher/detailedArticlePage.dart';
+import 'package:publisher/components/likeWidget.dart';
+import 'package:publisher/screens/detailedArticlePage.dart';
 
 class ArticlesPage extends StatefulWidget {
   @override
@@ -24,6 +26,7 @@ class _ArticlesPageState extends State<ArticlesPage> {
   final int _defaultPhotosPerPageCount = 10;
   List<Article> _articles;
   final int _nextPageThreshold = 5;
+  DateFormat dateFormat = new DateFormat("dd. MM. yyyy");
 
   @override
   void initState() {
@@ -83,47 +86,6 @@ class _ArticlesPageState extends State<ArticlesPage> {
         _error = true;
       });
     }
-  }
-
-  void toggleLikeArticle(Article article) async {
-    var headers;
-    if (Auth().getLoginStatus()) {
-      headers = {
-        HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
-      };
-    } else {
-      return;
-    }
-
-    bool _liked = article.liked;
-    int _likeCount = article.likeCount;
-
-    if (article.liked) {
-      final response = await http.put(
-        Uri.http(
-            '${env['HOST']}:${env['PORT']}', 'article/${article.id}/unlike'),
-        headers: headers,
-      );
-      if (response.statusCode != 200) {
-        throw Exception('Invalid response code ${response.statusCode}');
-      }
-      _liked = false;
-      _likeCount--;
-    } else {
-      final response = await http.put(
-        Uri.http('${env['HOST']}:${env['PORT']}', 'article/${article.id}/like'),
-        headers: headers,
-      );
-      if (response.statusCode != 200) {
-        throw Exception('Invalid response code ${response.statusCode}');
-      }
-      _liked = true;
-      _likeCount++;
-    }
-    setState(() {
-      article.liked = _liked;
-      article.likeCount = _likeCount;
-    });
   }
 
   Widget getBody() {
@@ -266,48 +228,47 @@ class _ArticlesPageState extends State<ArticlesPage> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 10.0,
-                      bottom: 10.0,
-                      right: 10.0,
-                    ),
-                    child: Container(
-                      height: 80,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Text(
-                                'By ${article.author.firstName} '
-                                '${article.author.lastName} '
-                                '| ${article.createdAt.substring(8, 10)}.'
-                                '${article.createdAt.substring(5, 7)}',
+                    padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
+                    child: Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: List.generate(article.categories.length,
+                                  (index) {
+                                return new Container(
+                                    margin: EdgeInsets.only(
+                                        left: 2, right: 2, top: 4, bottom: 8),
+                                    child: Chip(
+                                        label: Text(
+                                            article.categories[index].name)));
+                              }),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Row(
+                                children: [
+                                  Text("By "),
+                                  Text(
+                                      "${article.author.firstName} ${article.author.lastName}"),
+                                  Text(" | "),
+                                  Text(dateFormat.format(
+                                      DateTime.parse(article.createdAt)))
+                                ],
                               ),
                             ),
-                          ),
-                          Column(
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () => toggleLikeArticle(
-                                    article,
-                                  ),
-                                  child: Icon(
-                                    article.liked
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    size: 40.0,
-                                  ),
-                                ),
-                              ),
-                              Text('${article.likeCount} likes'),
-                            ],
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                        Spacer(),
+                        LikeWidget(
+                          id: article.id,
+                          liked: article.liked,
+                          likeCount: article.likeCount,
+                        )
+                      ],
                     ),
-                  ),
+                  )
                 ],
               ),
             );

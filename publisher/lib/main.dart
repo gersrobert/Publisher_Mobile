@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:publisher/auth/auth.dart';
-import 'package:publisher/publisher/articlesPage.dart';
-import 'package:publisher/publisher/profilePage.dart';
+import 'package:publisher/screens/articlesPage.dart';
+import 'package:publisher/screens/profilePage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart' as DotEnv;
 
 void main() async {

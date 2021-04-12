@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:publisher/customWidgets/pAppBar.dart';
+import 'package:publisher/components/customAppBar.dart';
 import 'package:publisher/auth/auth.dart';
 import 'package:provider/provider.dart';
 
