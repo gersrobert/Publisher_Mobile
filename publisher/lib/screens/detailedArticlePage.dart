@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:publisher/DTO/DetailedArticle.dart';
+import 'package:publisher/auth/auth.dart';
 import 'package:publisher/components/customAppBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publisher/components/likeWidget.dart';
@@ -24,7 +26,10 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
   bool _loading;
   DateFormat dateFormat = new DateFormat("dd. MM. yyyy");
   bool commentMode = false;
+
   ScrollController _scrollController = new ScrollController();
+  final _formKey = GlobalKey<FormState>();
+  final _commentController = TextEditingController();
 
   @override
   void initState() {
@@ -44,8 +49,16 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
 
   void getDetailedArticle() async {
     try {
+      var headers;
+      if (Auth().getLoginStatus()) {
+        headers = {
+          HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
+        };
+      }
+
       final response = await http.get(
-          Uri.http('${env['HOST']}:${env['PORT']}', 'article/${widget.id}'));
+          Uri.http('${env['HOST']}:${env['PORT']}', 'article/${widget.id}'),
+          headers: headers);
 
       if (response.statusCode != 200) {
         throw Exception('Invalid response code');
@@ -63,29 +76,66 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
     }
   }
 
+  void submitComment() async {
+    if (_formKey.currentState.validate()) {
+      if (Auth().getLoginStatus()) {
+        var headers = {
+          HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}",
+          HttpHeaders.contentTypeHeader: "application/json",
+        };
+
+        var content = _commentController.text;
+
+        final response = await http.post(
+            Uri.http('${env['HOST']}:${env['PORT']}',
+                '/article/${_article.id}/comment'),
+            headers: headers,
+            body: jsonEncode({"content": _commentController.text})
+        );
+
+        if (response.statusCode == 200) {
+          getDetailedArticle();
+          cancelComment();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            backgroundColor: Color.fromARGB(255, 232, 39, 5),
+            content: Text("Error trying to post comment"),
+          ));
+        }
+      }
+    }
+  }
+
+  void cancelComment() {
+    setState(() {
+      commentMode = false;
+      _commentController.clear();
+    });
+  }
+
   Widget getBody() {
     if (_article == null) {
       if (_loading) {
         return Center(
             child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: CircularProgressIndicator(),
-        ));
+              padding: const EdgeInsets.all(8),
+              child: CircularProgressIndicator(),
+            ));
       } else if (_error) {
         return Center(
             child: InkWell(
-          onTap: () {
-            setState(() {
-              _loading = true;
-              _error = false;
-              getDetailedArticle();
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text("Error while loading article, tap to try again"),
-          ),
-        ));
+              onTap: () {
+                setState(() {
+                  _loading = true;
+                  _error = false;
+                  getDetailedArticle();
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text("Error while loading article, tap to try again"),
+              ),
+            ));
       }
     } else {
       return Container(
@@ -148,7 +198,7 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                   children: [
                     Row(
                       children:
-                          List.generate(_article.categories.length, (index) {
+                      List.generate(_article.categories.length, (index) {
                         return new Container(
                             margin: EdgeInsets.only(
                                 left: 2, right: 2, top: 4, bottom: 8),
@@ -162,7 +212,8 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                         children: [
                           Text("By "),
                           Text(
-                              "${_article.author.firstName} ${_article.author.lastName}"),
+                              "${_article.author.firstName} ${_article.author
+                                  .lastName}"),
                           Text(" | "),
                           Text(dateFormat
                               .format(DateTime.parse(_article.createdAt)))
@@ -193,33 +244,36 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
   Widget getComments() {
     return Container(
         child: Column(children: [
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(_article.comments.length, (index) {
-          return Container(
-              margin: EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(_article.comments.length, (index) {
+              return Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "${_article.comments[index].author.firstName} ${_article.comments[index].author.lastName}",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Text(
+                            "${_article.comments[index].author
+                                .firstName} ${_article.comments[index].author
+                                .lastName}",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(" | "),
+                          Text(dateFormat.format(
+                              DateTime.parse(
+                                  _article.comments[index].createdAt))),
+                        ],
                       ),
-                      Text(" | "),
-                      Text(dateFormat.format(
-                          DateTime.parse(_article.comments[index].createdAt))),
+                      Text(
+                        _article.comments[index].content,
+                      ),
                     ],
-                  ),
-                  Text(
-                    _article.comments[index].content,
-                  ),
-                ],
-              ));
-        }),
-      ),
-    ]));
+                  ));
+            }),
+          ),
+        ]));
   }
 
   Widget getCommentForm() {
@@ -227,27 +281,31 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
       margin: EdgeInsets.only(bottom: 16, left: 8, right: 8),
       child: Column(
         children: [
-          TextFormField(
-            decoration: const InputDecoration(hintText: "Say something"),
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-            maxLines: null,
+          Form(
+            key: _formKey,
+            child: TextFormField(
+              controller: _commentController,
+              decoration: const InputDecoration(hintText: "Say something"),
+              validator: (value) {
+                if (value.isEmpty) {
+                  return 'Please enter some text';
+                }
+                return null;
+              },
+              maxLines: null,
+            ),
           ),
           Row(
             children: [
               Spacer(),
               TextButton(
                   onPressed: () {
-                    setState(() {
-                      commentMode = false;
-                    });
+                    cancelComment();
                   },
                   child: Text("Cancel")),
-              TextButton(onPressed: () {}, child: Text("Send")),
+              TextButton(onPressed: () {
+                submitComment();
+              }, child: Text("Send")),
             ],
           )
         ],
