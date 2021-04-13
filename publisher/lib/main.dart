@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:publisher/auth/auth.dart';
 import 'package:publisher/screens/articlesPage.dart';
+import 'package:publisher/screens/insertArticlePage.dart';
 import 'package:publisher/screens/profilePage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart' as DotEnv;
 
@@ -26,6 +27,7 @@ class App extends StatelessWidget {
         routes: {
           '/articles': (context) => ArticlesPage(),
           '/profile': (context) => Profile(),
+          '/insert': (context) => InsertArticlePage(),
         },
       ),
     );

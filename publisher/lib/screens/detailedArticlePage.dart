@@ -66,7 +66,10 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
 
       setState(() {
         _loading = false;
-        _article = DetailedArticle.fromJson(jsonDecode(response.body));
+        _article = DetailedArticle.fromJson(
+            jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
+
+        log(_article.content);
       });
     } catch (e) {
       setState(() {
@@ -90,8 +93,7 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
             Uri.http('${env['HOST']}:${env['PORT']}',
                 '/article/${_article.id}/comment'),
             headers: headers,
-            body: jsonEncode({"content": _commentController.text})
-        );
+            body: jsonEncode({"content": _commentController.text}));
 
         if (response.statusCode == 200) {
           getDetailedArticle();
@@ -118,24 +120,24 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
       if (_loading) {
         return Center(
             child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: CircularProgressIndicator(),
-            ));
+          padding: const EdgeInsets.all(8),
+          child: CircularProgressIndicator(),
+        ));
       } else if (_error) {
         return Center(
             child: InkWell(
-              onTap: () {
-                setState(() {
-                  _loading = true;
-                  _error = false;
-                  getDetailedArticle();
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text("Error while loading article, tap to try again"),
-              ),
-            ));
+          onTap: () {
+            setState(() {
+              _loading = true;
+              _error = false;
+              getDetailedArticle();
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text("Error while loading article, tap to try again"),
+          ),
+        ));
       }
     } else {
       return Container(
@@ -153,26 +155,28 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                 ),
                 getContent(),
                 Container(
-                  margin: EdgeInsets.only(bottom: 16),
+                  margin: EdgeInsets.only(bottom: 0),
                   child: Divider(thickness: 2),
                 ),
                 getComments(),
                 Visibility(
                     visible: !commentMode,
-                    child: TextButton(
-                      onPressed: () {
-                        setState(() {
-                          commentMode = true;
-                          _scrollController.animateTo(
-                              _scrollController.position.pixels + 100,
-                              curve: Curves.easeInOut,
-                              duration: const Duration(milliseconds: 300));
-                        });
-                      },
-                      child: Row(
-                        children: [Icon(Icons.add), Text("Add comment")],
-                      ),
-                    )),
+                    child: Container(
+                        margin: EdgeInsets.only(bottom: 8),
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() {
+                              commentMode = true;
+                              _scrollController.animateTo(
+                                  _scrollController.position.pixels + 100,
+                                  curve: Curves.easeInOut,
+                                  duration: const Duration(milliseconds: 300));
+                            });
+                          },
+                          child: Row(
+                            children: [Icon(Icons.add), Text("Add comment")],
+                          ),
+                        ))),
                 Visibility(visible: commentMode, child: getCommentForm()),
               ],
             ),
@@ -198,7 +202,7 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                   children: [
                     Row(
                       children:
-                      List.generate(_article.categories.length, (index) {
+                          List.generate(_article.categories.length, (index) {
                         return new Container(
                             margin: EdgeInsets.only(
                                 left: 2, right: 2, top: 4, bottom: 8),
@@ -212,8 +216,7 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                         children: [
                           Text("By "),
                           Text(
-                              "${_article.author.firstName} ${_article.author
-                                  .lastName}"),
+                              "${_article.author.firstName} ${_article.author.lastName}"),
                           Text(" | "),
                           Text(dateFormat
                               .format(DateTime.parse(_article.createdAt)))
@@ -243,37 +246,35 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
 
   Widget getComments() {
     return Container(
+      margin: EdgeInsets.only(left: 8, right: 8),
         child: Column(children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(_article.comments.length, (index) {
-              return Container(
-                  margin: EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(_article.comments.length, (index) {
+          return Container(
+              margin: EdgeInsets.only(top: 8, bottom: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            "${_article.comments[index].author
-                                .firstName} ${_article.comments[index].author
-                                .lastName}",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(" | "),
-                          Text(dateFormat.format(
-                              DateTime.parse(
-                                  _article.comments[index].createdAt))),
-                        ],
-                      ),
                       Text(
-                        _article.comments[index].content,
+                        "${_article.comments[index].author.firstName} ${_article.comments[index].author.lastName}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      Text(" | "),
+                      Text(dateFormat.format(
+                          DateTime.parse(_article.comments[index].createdAt))),
                     ],
-                  ));
-            }),
-          ),
-        ]));
+                  ),
+                  Text(
+                    _article.comments[index].content,
+                  ),
+                ],
+              ));
+        }),
+      ),
+    ]));
   }
 
   Widget getCommentForm() {
@@ -303,9 +304,11 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                     cancelComment();
                   },
                   child: Text("Cancel")),
-              TextButton(onPressed: () {
-                submitComment();
-              }, child: Text("Send")),
+              TextButton(
+                  onPressed: () {
+                    submitComment();
+                  },
+                  child: Text("Send")),
             ],
           )
         ],

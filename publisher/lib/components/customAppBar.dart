@@ -18,6 +18,10 @@ class PAppBar extends StatelessWidget implements PreferredSizeWidget {
         Auth().logoutAction();
         log('Pressed Logout button');
         break;
+      case 'Add article':
+        log('Pressed Add article');
+        Navigator.pushNamed(context, '/insert');
+        break;
     }
   }
 
@@ -30,13 +34,13 @@ class PAppBar extends StatelessWidget implements PreferredSizeWidget {
           builder: (context, auth, child) {
             var _options = {'Login'};
             if (auth.getLoginStatus()) {
-              _options = {'Profile', 'Logout'};
+              _options = {'Add article', 'Profile', 'Logout'};
             }
             return PopupMenuButton(
               onSelected: (String value) => _handleClick(context, value),
               itemBuilder: (BuildContext context) {
                 return _options.map(
-                  (String choice) {
+                  (choice) {
                     return PopupMenuItem<String>(
                       value: choice,
                       child: Text(choice),

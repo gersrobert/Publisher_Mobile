@@ -71,7 +71,7 @@ class _ArticlesPageState extends State<ArticlesPage> {
         throw Exception('Invalid response code ${response.statusCode}');
       }
 
-      Articles fetchedArticles = Articles.fromJson(jsonDecode(response.body));
+      Articles fetchedArticles = Articles.fromJson(jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
 
       setState(() {
         _hasMore = fetchedArticles.content.length == _defaultPhotosPerPageCount;
