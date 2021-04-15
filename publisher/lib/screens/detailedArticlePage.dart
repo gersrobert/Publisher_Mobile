@@ -1,14 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:publisher/DTO/DetailedArticle.dart';
-import 'package:publisher/auth/auth.dart';
+import 'package:publisher/api/api.dart';
 import 'package:publisher/components/customAppBar.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publisher/components/likeWidget.dart';
 
 class DetailedArticlePage extends StatefulWidget {
@@ -49,16 +46,7 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
 
   void getDetailedArticle() async {
     try {
-      var headers;
-      if (Auth().getLoginStatus()) {
-        headers = {
-          HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
-        };
-      }
-
-      final response = await http.get(
-          Uri.http('${env['HOST']}:${env['PORT']}', 'article/${widget.id}'),
-          headers: headers);
+      final response = await Api().getDetailedArticle(widget.id);
 
       if (response.statusCode != 200) {
         throw Exception('Invalid response code');
@@ -81,29 +69,16 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
 
   void submitComment() async {
     if (_formKey.currentState.validate()) {
-      if (Auth().getLoginStatus()) {
-        var headers = {
-          HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}",
-          HttpHeaders.contentTypeHeader: "application/json",
-        };
+      var response = await Api().addComment(widget.id, _commentController.text);
 
-        var content = _commentController.text;
-
-        final response = await http.post(
-            Uri.http('${env['HOST']}:${env['PORT']}',
-                '/article/${_article.id}/comment'),
-            headers: headers,
-            body: jsonEncode({"content": _commentController.text}));
-
-        if (response.statusCode == 200) {
-          getDetailedArticle();
-          cancelComment();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Color.fromARGB(255, 232, 39, 5),
-            content: Text("Error trying to post comment"),
-          ));
-        }
+      if (response.statusCode == 200) {
+        getDetailedArticle();
+        cancelComment();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: Color.fromARGB(255, 232, 39, 5),
+          content: Text("Error trying to post comment"),
+        ));
       }
     }
   }

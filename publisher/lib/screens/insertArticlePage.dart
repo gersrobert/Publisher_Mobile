@@ -1,16 +1,15 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:publisher/auth/auth.dart';
+import 'package:publisher/DTO/DetailedArticle.dart';
+import 'package:publisher/api/api.dart';
 import 'package:publisher/components/customAppBar.dart';
-import 'package:http/http.dart' as http;
 
 class InsertArticlePage extends StatefulWidget {
-  InsertArticlePage({Key key}) : super(key: key);
+  final String id;
+
+  InsertArticlePage({Key key, this.id}) : super(key: key);
 
   @override
   _InsertArticlePage createState() => _InsertArticlePage();
@@ -20,11 +19,18 @@ class _InsertArticlePage extends State<InsertArticlePage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  List<String> categories = [];
+  final _categoryController = TextEditingController();
+  List<String> _categories = [];
+
+  DetailedArticle _article;
 
   @override
   void initState() {
     super.initState();
+
+    if (widget.id != null) {
+      getArticle(widget.id);
+    }
   }
 
   @override
@@ -33,6 +39,21 @@ class _InsertArticlePage extends State<InsertArticlePage> {
       appBar: PAppBar(),
       body: getBody(),
     );
+  }
+
+  void getArticle(String id) async {
+    var response = await Api().getDetailedArticle(id);
+    _article = DetailedArticle.fromJson(
+        jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
+
+    _titleController.text = _article.title;
+    _contentController.text = _article.content;
+
+    setState(() {
+      for (var category in _article.categories) {
+        _categories.add(category.name);
+      }
+    });
   }
 
   Widget getBody() {
@@ -46,7 +67,8 @@ class _InsertArticlePage extends State<InsertArticlePage> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(hintText: "Set title"),
+                  decoration: const InputDecoration(
+                      labelText: "Title", hintText: "Set title"),
                   validator: (value) {
                     if (value.isEmpty) {
                       return 'The title cannot be empty';
@@ -56,27 +78,35 @@ class _InsertArticlePage extends State<InsertArticlePage> {
                   maxLines: 1,
                 ),
                 Row(
-                  children: List.generate(categories.length + 1, (index) {
+                  children: List.generate(_categories.length + 1, (index) {
                     return new Container(
                         margin: EdgeInsets.only(
                             left: 2, right: 2, top: 4, bottom: 8),
-                        child: ActionChip(
-                          label: index == categories.length
-                              ? Icon(Icons.add)
-                              : Text(categories[index]),
-                          onPressed: () {
-                            if (index != categories.length) {
-                              return;
-                            }
-
-                            log("add cat");
-                          },
-                        ));
+                        child: index == _categories.length
+                            ? ActionChip(
+                                label: Icon(Icons.add),
+                                onPressed: () {
+                                  return showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return getCategoryAddDialog();
+                                      });
+                                },
+                              )
+                            : Chip(
+                                label: Text(_categories[index]),
+                                onDeleted: () {
+                                  setState(() {
+                                    _categories.removeAt(index);
+                                  });
+                                },
+                              ));
                   }),
                 ),
                 TextFormField(
                   controller: _contentController,
-                  decoration: const InputDecoration(hintText: "Set content"),
+                  decoration: const InputDecoration(
+                      labelText: "Content", hintText: "Set content"),
                   validator: (value) {
                     if (value.isEmpty) {
                       return 'The content cannot be empty';
@@ -85,11 +115,15 @@ class _InsertArticlePage extends State<InsertArticlePage> {
                   },
                   maxLines: null,
                 ),
-                Row(
-                  children: [
-                    Spacer(),
-                    TextButton(onPressed: submitForm, child: Text('Submit')),
-                  ],
+                Container(
+                  margin: EdgeInsets.only(top: 8),
+                  child: Row(
+                    children: [
+                      Spacer(),
+                      ElevatedButton(
+                          onPressed: submitForm, child: Text('Submit')),
+                    ],
+                  ),
                 )
               ],
             ),
@@ -97,33 +131,82 @@ class _InsertArticlePage extends State<InsertArticlePage> {
         ));
   }
 
+  AlertDialog getCategoryAddDialog() {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(
+          Radius.circular(10.0),
+        ),
+        side: BorderSide(
+          color: Colors.black,
+          width: 0.6,
+        ),
+      ),
+      insetPadding: EdgeInsets.symmetric(horizontal: 0),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextFormField(
+          controller: _categoryController,
+          decoration: const InputDecoration(
+              labelText: "Category", hintText: "Set cateogry name"),
+          validator: (value) {
+            if (value.isEmpty) {
+              return 'The category cannot be empty';
+            }
+            return null;
+          },
+          maxLines: 1,
+        ),
+        Row(
+          children: [
+            Spacer(),
+            Container(
+              margin: EdgeInsets.only(top: 8, right: 4),
+              child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _categoryController.clear();
+                  },
+                  child: Text("Cancel")),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 8, left: 4),
+              child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      if (_categoryController.text.isNotEmpty) {
+                        _categories.add(_categoryController.text);
+                        _categoryController.clear();
+                      }
+                      Navigator.pop(context);
+                    });
+                  },
+                  child: Text("Add")),
+            ),
+          ],
+        )
+      ]),
+    );
+  }
+
   Future<void> submitForm() async {
     if (_formKey.currentState.validate()) {
-      if (Auth().getLoginStatus()) {
-        var headers = {
-          HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}",
-          HttpHeaders.contentTypeHeader: "application/json",
-        };
+      var response;
+      if (widget.id == null) {
+        response = await Api().addArticle(
+            _titleController.text, _contentController.text, _categories);
+      } else {
+        response = await Api().updateArticle(
+            widget.id, _titleController.text, _contentController.text, _categories);
+      }
 
-        var body = {
-          'title': _titleController.text,
-          'content': _contentController.text,
-          'categories': ['test']
-        };
-
-        final response = await http.post(
-            Uri.http('${env['HOST']}:${env['PORT']}', '/article'),
-            headers: headers,
-            body: jsonEncode(body));
-
-        if (response.statusCode == 200) {
-          Navigator.maybePop(context);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Color.fromARGB(255, 232, 39, 5),
-            content: Text("Error trying to insert article"),
-          ));
-        }
+      if (response.statusCode == 200) {
+        Navigator.maybePop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: Color.fromARGB(255, 232, 39, 5),
+          content: Text("Error trying to ${widget.id == null ? 'insert' : 'update'} article"),
+        ));
       }
     }
   }
