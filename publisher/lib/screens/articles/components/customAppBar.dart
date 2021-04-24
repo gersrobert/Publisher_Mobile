@@ -1,10 +1,18 @@
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:publisher/auth/auth.dart';
+import 'package:publisher/screens/articles/components/filter.dart';
 
 class PAppBar extends StatelessWidget implements PreferredSizeWidget {
   void _handleClick(BuildContext context, String value) {
     switch (value) {
+      case 'Filter':
+        showDialog<void>(
+            context: context,
+            builder: (BuildContext context) {
+              return Filter();
+            });
+        break;
       case 'Login':
         Auth().loginAction();
         break;
@@ -27,9 +35,9 @@ class PAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: <Widget>[
         Consumer<Auth>(
           builder: (context, auth, child) {
-            var _options = {'Login'};
+            var _options = {'Filter', 'Login'};
             if (auth.getLoginStatus()) {
-              _options = {'Add article', 'Profile', 'Logout'};
+              _options = {'Filter', 'Add article', 'Profile', 'Logout'};
             }
             return PopupMenuButton(
               onSelected: (String value) => _handleClick(context, value),

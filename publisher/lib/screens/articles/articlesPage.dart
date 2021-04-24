@@ -1,18 +1,28 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'dart:developer';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:publisher/DTO/Article.dart';
 import 'package:publisher/DTO/Articles.dart';
-import 'package:publisher/auth/auth.dart';
-import 'package:publisher/components/customAppBar.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:publisher/screens/articles/components/customAppBar.dart';
+import 'package:publisher/screens/articles/components/describeArticle.dart';
+import 'package:publisher/screens/articles/components/categories.dart';
+import 'package:publisher/screens/articles/components/authorAndDate.dart';
 import 'package:publisher/components/likeWidget.dart';
 import 'package:publisher/screens/detailedArticlePage.dart';
+import 'package:publisher/api/api.dart';
 
 class ArticlesPage extends StatefulWidget {
+  final String author;
+  final String title;
+  final String category;
+
+  const ArticlesPage({
+    Key key,
+    this.author,
+    this.title,
+    this.category,
+  }) : super(key: key);
+
   @override
   _ArticlesPageState createState() => _ArticlesPageState();
 }
@@ -54,24 +64,19 @@ class _ArticlesPageState extends State<ArticlesPage> {
     }
 
     try {
-      var queryParameters = {"page": "$_pageNumber"};
-
-      var headers;
-      if (Auth().getLoginStatus()) {
-        headers = {
-          HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
-        };
-      }
-
-      final response = await http.get(
-        Uri.http('${env['HOST']}:${env['PORT']}', 'article', queryParameters),
-        headers: headers,
+      var response = await Api().getArticles(
+        _pageNumber,
+        widget.author,
+        widget.title,
+        widget.category,
       );
+
       if (response.statusCode != 200) {
-        throw Exception('Invalid response code ${response.statusCode}');
+        throw Exception('Invalid response code');
       }
 
-      Articles fetchedArticles = Articles.fromJson(jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
+      Articles fetchedArticles = Articles.fromJson(
+          jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
 
       setState(() {
         _hasMore = fetchedArticles.content.length == _defaultPhotosPerPageCount;
@@ -155,67 +160,28 @@ class _ArticlesPageState extends State<ArticlesPage> {
               ),
               margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      child: TextButton(
-                        onLongPress: () {
-                          return showDialog<void>(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(10.0),
-                                  ),
-                                  side: BorderSide(
-                                    color: Colors.black,
-                                    width: 0.6,
-                                  ),
-                                ),
-                                insetPadding:
-                                    EdgeInsets.symmetric(horizontal: 5),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 5, vertical: 10),
-                                content: TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            DetailedArticlePage(
-                                          id: article.id,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    primary: Colors.black,
-                                  ),
-                                  child: Text(
-                                    '${article.title}',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => DetailedArticlePage(
-                                id: article.id,
-                              ),
+                  Container(
+                    child: TextButton(
+                      onLongPress: () {
+                        return describeArticle(context, article);
+                      },
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => DetailedArticlePage(
+                              id: article.id,
                             ),
-                          );
-                        },
-                        style: ButtonStyle(
-                          foregroundColor:
-                              MaterialStateProperty.all<Color>(Colors.black),
-                        ),
+                          ),
+                        );
+                      },
+                      style: ButtonStyle(
+                        foregroundColor:
+                            MaterialStateProperty.all<Color>(Colors.black),
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
                         child: Text(
                           "${article.title}",
                           overflow: TextOverflow.ellipsis,
@@ -224,8 +190,8 @@ class _ArticlesPageState extends State<ArticlesPage> {
                           ),
                         ),
                       ),
-                      width: MediaQuery.of(context).size.width - 50,
                     ),
+                    width: MediaQuery.of(context).size.width - 50,
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
@@ -234,30 +200,8 @@ class _ArticlesPageState extends State<ArticlesPage> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: List.generate(article.categories.length,
-                                  (index) {
-                                return new Container(
-                                    margin: EdgeInsets.only(
-                                        left: 2, right: 2, top: 4, bottom: 8),
-                                    child: Chip(
-                                        label: Text(
-                                            article.categories[index].name)));
-                              }),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Row(
-                                children: [
-                                  Text("By "),
-                                  Text(
-                                      "${article.author.firstName} ${article.author.lastName}"),
-                                  Text(" | "),
-                                  Text(dateFormat.format(
-                                      DateTime.parse(article.createdAt)))
-                                ],
-                              ),
-                            ),
+                            Categories(article),
+                            AuthorAndDate(article),
                           ],
                         ),
                         Spacer(),

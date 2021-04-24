@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:publisher/auth/auth.dart';
-import 'package:publisher/screens/articlesPage.dart';
+import 'package:publisher/screens/articles/articlesPage.dart';
 import 'package:publisher/screens/insertArticlePage.dart';
 import 'package:publisher/screens/profilePage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart' as DotEnv;
@@ -25,7 +25,11 @@ class App extends StatelessWidget {
         ),
         initialRoute: '/articles',
         routes: {
-          '/articles': (context) => ArticlesPage(),
+          '/articles': (context) => ArticlesPage(
+              // author: 'branisa6',
+              // category: 'test2',
+              // title: 'clanok',
+              ),
           '/profile': (context) => Profile(),
           '/insert': (context) => InsertArticlePage(),
         },

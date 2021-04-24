@@ -196,8 +196,8 @@ class _InsertArticlePage extends State<InsertArticlePage> {
         response = await Api().addArticle(
             _titleController.text, _contentController.text, _categories);
       } else {
-        response = await Api().updateArticle(
-            widget.id, _titleController.text, _contentController.text, _categories);
+        response = await Api().updateArticle(widget.id, _titleController.text,
+            _contentController.text, _categories);
       }
 
       if (response.statusCode == 200) {
@@ -205,7 +205,8 @@ class _InsertArticlePage extends State<InsertArticlePage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           backgroundColor: Color.fromARGB(255, 232, 39, 5),
-          content: Text("Error trying to ${widget.id == null ? 'insert' : 'update'} article"),
+          content: Text(
+              "Error trying to ${widget.id == null ? 'insert' : 'update'} article"),
         ));
       }
     }
