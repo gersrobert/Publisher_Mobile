@@ -64,8 +64,12 @@
 		</dict>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Choose portrait from library</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Take new portrait</string>
+    <string>Allow access to photo library</string>
+
+    <key>NSCameraUsageDescription</key>
+    <string>Allow access to camera to capture photos</string>
+
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Allow access to microphone</string>
 </dict>
 </plist>

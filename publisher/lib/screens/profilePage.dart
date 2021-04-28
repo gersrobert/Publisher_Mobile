@@ -27,8 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading;
   AppUser _user;
   bool _owner;
-  File _image;
-  final picker = ImagePicker();
+  String _image;
 
   @override
   void initState() {
@@ -39,6 +38,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _image = null;
     _user = AppUser('', 'Firstname', 'Lastname', '', []);
     getUser();
+
+    getImage();
   }
 
   void getUser() async {
@@ -118,18 +119,17 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void setNewImage() async {
-    if (!_owner) return;
+  void getImage() async {
+    File image = await ImagePicker.pickImage(
+        source: ImageSource.camera, imageQuality: 50);
 
-    final pickedFile = await picker.getImage(source: ImageSource.camera);
+    if (image != null) {
+      String bytes = base64Encode(image.readAsBytesSync());
 
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
+      setState(() {
+        _image = bytes;
+      });
+    }
   }
 
   @override
@@ -144,6 +144,21 @@ class _ProfilePageState extends State<ProfilePage> {
             SizedBox(height: 20),
             Align(
               alignment: Alignment.center,
+              child: ClipRRect(
+                child: _image == null
+                    ? SizedBox(height: 0)
+                    : Image.memory(
+                        base64Decode(_image),
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.cover,
+                      ),
+                borderRadius: BorderRadius.circular(50),
+              ),
+            ),
+            SizedBox(height: 20),
+            Align(
+              alignment: Alignment.center,
               child: Text(
                 "${_user.firstName} ${_user.lastName}",
                 style: TextStyle(
@@ -152,26 +167,9 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             SizedBox(height: 20),
-            portrait(),
-            SizedBox(height: 20),
             Expanded(child: articleList()),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget portrait() {
-    return Align(
-      alignment: Alignment.center,
-      child: TextButton(
-        child: _image == null
-            ? Icon(
-                Icons.face,
-                size: 100,
-              )
-            : Image.file(_image),
-        onPressed: setNewImage,
       ),
     );
   }
