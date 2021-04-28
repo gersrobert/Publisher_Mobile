@@ -2,6 +2,7 @@
     package="com.example.publisher">
    <application
         android:label="Publisher"
+        android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"

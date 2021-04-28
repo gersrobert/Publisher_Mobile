@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:publisher/DTO/Article.dart';
+import 'package:publisher/screens/articles/articlesPage.dart';
 import 'package:publisher/screens/detailedArticlePage.dart';
 
 void describeArticle(BuildContext context, Article article) {
@@ -46,41 +47,23 @@ void describeArticle(BuildContext context, Article article) {
                 child: Wrap(
                   spacing: 8,
                   children: List.generate(article.categories.length, (index) {
-                    return Chip(
+                    return InputChip(
                       label: Text(
                         article.categories[index].name,
                       ),
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ArticlesPage(
+                              category: article.categories[index].name,
+                            ),
+                          ),
+                        );
+                      },
                     );
                   }),
                 ),
               )
-              // Align(
-              //   alignment: Alignment.centerLeft,
-              //   child: Padding(
-              //     padding: const EdgeInsets.only(left: 8.0),
-              //     child: SingleChildScrollView(
-              //       scrollDirection: Axis.horizontal,
-              //       child: Row(
-              //         children:
-              //             List.generate(article.categories.length, (index) {
-              //           return Container(
-              //             margin: EdgeInsets.only(
-              //               left: 2,
-              //               right: 2,
-              //               top: 4,
-              //               bottom: 8,
-              //             ),
-              //             child: Chip(
-              //               label: Text(
-              //                 article.categories[index].name,
-              //               ),
-              //             ),
-              //           );
-              //         }),
-              //       ),
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ),

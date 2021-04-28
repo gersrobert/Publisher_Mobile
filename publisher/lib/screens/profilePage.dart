@@ -1,18 +1,17 @@
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:publisher/DTO/AppUser.dart';
 import 'package:publisher/DTO/Article.dart';
+import 'package:publisher/components/categories.dart';
 import 'package:publisher/components/customAppBar.dart';
 import 'package:publisher/auth/auth.dart';
-import 'package:provider/provider.dart';
 import 'package:publisher/api/api.dart';
 import 'package:publisher/components/likeWidget.dart';
 import 'package:publisher/screens/detailedArticlePage.dart';
 import 'package:publisher/screens/insertArticlePage.dart';
-
-import 'articles/components/categories.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userId;
@@ -28,6 +27,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading;
   AppUser _user;
   bool _owner;
+  File _image;
+  final picker = ImagePicker();
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _error = false;
     _loading = true;
     _owner = false;
+    _image = null;
     _user = AppUser('', 'Firstname', 'Lastname', '', []);
     getUser();
   }
@@ -116,6 +118,20 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void setNewImage() async {
+    if (!_owner) return;
+
+    final pickedFile = await picker.getImage(source: ImageSource.camera);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,9 +152,26 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             SizedBox(height: 20),
+            portrait(),
+            SizedBox(height: 20),
             Expanded(child: articleList()),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget portrait() {
+    return Align(
+      alignment: Alignment.center,
+      child: TextButton(
+        child: _image == null
+            ? Icon(
+                Icons.face,
+                size: 100,
+              )
+            : Image.file(_image),
+        onPressed: setNewImage,
       ),
     );
   }

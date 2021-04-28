@@ -7,6 +7,7 @@ import 'package:publisher/DTO/DetailedArticle.dart';
 import 'package:publisher/api/api.dart';
 import 'package:publisher/components/customAppBar.dart';
 import 'package:publisher/components/likeWidget.dart';
+import 'package:publisher/screens/articles/articlesPage.dart';
 import 'package:publisher/screens/profilePage.dart';
 
 class DetailedArticlePage extends StatefulWidget {
@@ -177,14 +178,29 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children:
-                          List.generate(_article.categories.length, (index) {
-                        return new Container(
+                      children: List.generate(
+                        _article.categories.length,
+                        (index) {
+                          return new Container(
                             margin: EdgeInsets.only(
                                 left: 2, right: 2, top: 4, bottom: 8),
-                            child: Chip(
-                                label: Text(_article.categories[index].name)));
-                      }),
+                            child: InputChip(
+                              label: Text(
+                                _article.categories[index].name,
+                              ),
+                              onPressed: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => ArticlesPage(
+                                      category: _article.categories[index].name,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),

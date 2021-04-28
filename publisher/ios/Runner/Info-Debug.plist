@@ -63,5 +63,9 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose portrait from library</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take new portrait</string>
 </dict>
 </plist>

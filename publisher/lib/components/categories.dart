@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:publisher/DTO/Article.dart';
+import 'package:publisher/screens/articles/articlesPage.dart';
 
 class Categories extends StatelessWidget {
   Categories(this.article);
@@ -20,10 +21,19 @@ class Categories extends StatelessWidget {
                 top: 4,
                 bottom: 8,
               ),
-              child: Chip(
+              child: InputChip(
                 label: Text(
                   article.categories[index].name,
                 ),
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ArticlesPage(
+                        category: article.categories[index].name,
+                      ),
+                    ),
+                  );
+                },
               ),
             );
           } else if (index == 2) {
