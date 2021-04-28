@@ -66,9 +66,6 @@ class _LikeWidgetState extends State<LikeWidget> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      // crossAxisAlignment: CrossAxisAlignment.center,
-      // mainAxisSize: MainAxisSize.max,
-      // mainAxisAlignment: MainAxisAlignment.end,
       children: [
         TextButton(
           onPressed: toggleLikeArticle,

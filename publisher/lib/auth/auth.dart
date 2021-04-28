@@ -16,7 +16,7 @@ class Auth extends ChangeNotifier {
   bool _isLoggedIn;
 
   String _accessToken;
-  // String _idToken;
+  Map _idToken;
   String _refreshToken;
 
   Auth._privateConstructor() {
@@ -53,10 +53,12 @@ class Auth extends ChangeNotifier {
 
       this._isLoggedIn = true;
       this._accessToken = response.accessToken;
+      this._idToken = parseIdToken(response.idToken);
       this._refreshToken = response.refreshToken;
 
-      log('${response.accessToken}');
-      log('${response.refreshToken}');
+      // log('${response.accessToken}');
+      // log('${parseIdToken(response.idToken)}');
+      // log('${response.refreshToken}');
 
       _secureStorage.write(key: 'refresh_token', value: response.refreshToken);
       notifyListeners();
@@ -97,6 +99,7 @@ class Auth extends ChangeNotifier {
       );
 
       this._accessToken = result.accessToken;
+      this._idToken = parseIdToken(result.idToken);
       // this._idToken = parseIdToken(result.idToken) as String;
       this._refreshToken = result.refreshToken;
 
@@ -124,6 +127,10 @@ class Auth extends ChangeNotifier {
 
   String getAccessToken() {
     return this._accessToken;
+  }
+
+  Map<String, dynamic> getIdToken() {
+    return this._idToken;
   }
 
   String getRefreshToken() {

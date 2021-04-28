@@ -30,7 +30,7 @@ class App extends StatelessWidget {
               // category: 'test2',
               // title: 'clanok',
               ),
-          '/profile': (context) => Profile(),
+          '/profile': (context) => ProfilePage(),
           '/insert': (context) => InsertArticlePage(),
         },
       ),

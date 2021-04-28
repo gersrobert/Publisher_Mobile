@@ -7,6 +7,7 @@ import 'package:publisher/DTO/DetailedArticle.dart';
 import 'package:publisher/api/api.dart';
 import 'package:publisher/components/customAppBar.dart';
 import 'package:publisher/components/likeWidget.dart';
+import 'package:publisher/screens/profilePage.dart';
 
 class DetailedArticlePage extends StatefulWidget {
   final String id;
@@ -190,8 +191,23 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
                       child: Row(
                         children: [
                           Text("By "),
-                          Text(
-                              "${_article.author.firstName} ${_article.author.lastName}"),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ProfilePage(
+                                    userId: _article.author.id,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Text(
+                                "${_article.author.firstName} ${_article.author.lastName}"),
+                            style: ButtonStyle(
+                              foregroundColor: MaterialStateProperty.all<Color>(
+                                  Colors.black),
+                            ),
+                          ),
                           Text(" | "),
                           Text(dateFormat
                               .format(DateTime.parse(_article.createdAt)))
@@ -221,35 +237,35 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
 
   Widget getComments() {
     return Container(
-      margin: EdgeInsets.only(left: 8, right: 8),
+        margin: EdgeInsets.only(left: 8, right: 8),
         child: Column(children: [
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(_article.comments.length, (index) {
-          return Container(
-              margin: EdgeInsets.only(top: 8, bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(_article.comments.length, (index) {
+              return Container(
+                  margin: EdgeInsets.only(top: 8, bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "${_article.comments[index].author.firstName} ${_article.comments[index].author.lastName}",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Text(
+                            "${_article.comments[index].author.firstName} ${_article.comments[index].author.lastName}",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(" | "),
+                          Text(dateFormat.format(DateTime.parse(
+                              _article.comments[index].createdAt))),
+                        ],
                       ),
-                      Text(" | "),
-                      Text(dateFormat.format(
-                          DateTime.parse(_article.comments[index].createdAt))),
+                      Text(
+                        _article.comments[index].content,
+                      ),
                     ],
-                  ),
-                  Text(
-                    _article.comments[index].content,
-                  ),
-                ],
-              ));
-        }),
-      ),
-    ]));
+                  ));
+            }),
+          ),
+        ]));
   }
 
   Widget getCommentForm() {

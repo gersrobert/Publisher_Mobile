@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:publisher/DTO/Article.dart';
+import 'package:publisher/screens/profilePage.dart';
 
 class AuthorAndDate extends StatelessWidget {
   AuthorAndDate(this.article);
@@ -15,7 +16,22 @@ class AuthorAndDate extends StatelessWidget {
       child: Row(
         children: [
           Text("By "),
-          Text("${article.author.firstName} ${article.author.lastName}"),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ProfilePage(
+                    userId: article.author.id,
+                  ),
+                ),
+              );
+            },
+            child:
+                Text("${article.author.firstName} ${article.author.lastName}"),
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
+            ),
+          ),
           Text(" | "),
           Text(dateFormat.format(DateTime.parse(article.createdAt)))
         ],

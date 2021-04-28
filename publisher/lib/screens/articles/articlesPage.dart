@@ -119,105 +119,104 @@ class _ArticlesPageState extends State<ArticlesPage> {
       }
     } else {
       return ListView.builder(
-          itemCount: _articles.length + (_hasMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index == _articles.length - _nextPageThreshold) {
-              getArticles();
-            }
-            if (index == _articles.length) {
-              if (_error) {
-                return Center(
-                    child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _loading = true;
-                      _error = false;
-                      getArticles();
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child:
-                        Text("Error while loading articles, tap to try again"),
-                  ),
-                ));
-              } else {
-                return Center(
-                    child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: CircularProgressIndicator(),
-                ));
-              }
-            }
-            final Article article = _articles[index];
-            return Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0),
-                side: BorderSide(
-                  color: Colors.grey,
-                  width: 0.4,
+        itemCount: _articles.length + (_hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _articles.length - _nextPageThreshold) {
+            getArticles();
+          }
+          if (index == _articles.length) {
+            if (_error) {
+              return Center(
+                  child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _loading = true;
+                    _error = false;
+                    getArticles();
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text("Error while loading articles, tap to try again"),
                 ),
+              ));
+            } else {
+              return Center(
+                  child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: CircularProgressIndicator(),
+              ));
+            }
+          }
+          final Article article = _articles[index];
+          return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5.0),
+              side: BorderSide(
+                color: Colors.grey,
+                width: 0.4,
               ),
-              margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    child: TextButton(
-                      onLongPress: () {
-                        return describeArticle(context, article);
-                      },
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => DetailedArticlePage(
-                              id: article.id,
-                            ),
+            ),
+            margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  child: TextButton(
+                    onLongPress: () {
+                      return describeArticle(context, article);
+                    },
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => DetailedArticlePage(
+                            id: article.id,
                           ),
-                        );
-                      },
-                      style: ButtonStyle(
-                        foregroundColor:
-                            MaterialStateProperty.all<Color>(Colors.black),
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "${article.title}",
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 24,
-                          ),
+                        ),
+                      );
+                    },
+                    style: ButtonStyle(
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(Colors.black),
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "${article.title}",
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 24,
                         ),
                       ),
                     ),
-                    width: MediaQuery.of(context).size.width - 50,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Categories(article),
-                            AuthorAndDate(article),
-                          ],
-                        ),
-                        Spacer(),
-                        LikeWidget(
-                          id: article.id,
-                          liked: article.liked,
-                          likeCount: article.likeCount,
-                        )
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            );
-          });
+                  width: MediaQuery.of(context).size.width - 50,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
+                  child: Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Categories(article),
+                          AuthorAndDate(article),
+                        ],
+                      ),
+                      Spacer(),
+                      LikeWidget(
+                        id: article.id,
+                        liked: article.liked,
+                        likeCount: article.likeCount,
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+          );
+        },
+      );
     }
-    return Container();
   }
 }

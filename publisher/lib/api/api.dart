@@ -48,6 +48,50 @@ class Api extends ChangeNotifier {
     );
   }
 
+  Future<http.Response> deleteArticle(String id) async {
+    if (!Auth().getLoginStatus()) {
+      throw Exception('forbidden');
+    }
+    var headers = {
+      HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
+    };
+
+    return http.delete(
+      Uri.http('${env['HOST']}:${env['PORT']}', 'article/$id'),
+      headers: headers,
+    );
+  }
+
+  Future<http.Response> getAuthenticatedUser() async {
+    if (!Auth().getLoginStatus()) {
+      throw Exception('Not Logged in.');
+    }
+
+    var headers = {
+      HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
+    };
+
+    return http.get(
+      Uri.http('${env['HOST']}:${env['PORT']}', 'user'),
+      headers: headers,
+    );
+  }
+
+  Future<http.Response> getUser(String userId) async {
+    if (!Auth().getLoginStatus()) {
+      throw Exception('Not Logged in.');
+    }
+
+    var headers = {
+      HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
+    };
+
+    return http.get(
+      Uri.http('${env['HOST']}:${env['PORT']}', 'user/$userId'),
+      headers: headers,
+    );
+  }
+
   Future<http.Response> getDetailedArticle(String id) async {
     var headers;
     if (Auth().getLoginStatus()) {
