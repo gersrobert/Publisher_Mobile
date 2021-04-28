@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:publisher/DTO/AppUser.dart';
 import 'package:publisher/DTO/Article.dart';
 import 'package:publisher/components/customAppBar.dart';
@@ -28,6 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading;
   AppUser _user;
   bool _owner;
+  String _image;
 
   @override
   void initState() {
@@ -37,6 +40,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _owner = false;
     _user = AppUser('', 'Firstname', 'Lastname', '', []);
     getUser();
+
+    getImage();
   }
 
   void getUser() async {
@@ -116,6 +121,20 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void getImage() async {
+    File image = await ImagePicker.pickImage(
+        source: ImageSource.camera, imageQuality: 50
+    );
+
+    if (image != null) {
+      String bytes = base64Encode(image.readAsBytesSync());
+
+      setState(() {
+        _image = bytes;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,6 +144,20 @@ class _ProfilePageState extends State<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            SizedBox(height: 20),
+            Align(
+              alignment: Alignment.center,
+              child:
+                ClipRRect(
+                  child: _image == null ? SizedBox(height: 0) : Image.memory(
+                    base64Decode(_image),
+                    height: 100,
+                    width: 100,
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+            ),
             SizedBox(height: 20),
             Align(
               alignment: Alignment.center,
