@@ -40,6 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void getUser() async {
+    print(Auth().getIdToken());
     if (widget.userId.isEmpty) {
       if (!Auth().getLoginStatus()) {
         throw Exception('invalid user');
@@ -66,6 +67,33 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       }
     } else {
+      if (Auth().getLoginStatus()) {
+        try {
+          var response = await Api().getAuthenticatedUser();
+
+          if (response.statusCode != 200) {
+            throw Exception('Invalid response code');
+          }
+
+          var _possibleUser = AppUser.fromJson(
+              jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
+
+          if (_possibleUser.id == widget.userId) {
+            setState(() {
+              _user = _possibleUser;
+              _owner = true;
+              _loading = false;
+            });
+            return;
+          }
+        } catch (e) {
+          setState(() {
+            _loading = false;
+            _error = true;
+          });
+        }
+      }
+
       var response;
       try {
         response = await Api().getUser(widget.userId);
@@ -132,48 +160,46 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PAppBar(),
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 20),
-            Align(
-              alignment: Alignment.center,
-              child: TextButton(
-                child: ClipRRect(
-                  child: _user.photo == null || _user.photo.isEmpty
-                      ? Icon(Icons.face, size: 100)
-                      : Image.memory(
-                    base64Decode(_user.photo),
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                onPressed: _owner == true ? changeImage : null,
-              )
-            ),
-            SizedBox(height: 20),
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                "${_user.firstName} ${_user.lastName}",
-                style: TextStyle(
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Expanded(child: articleList()),
-          ],
-        ),
-      ),
+      body: customList(),
     );
   }
 
-  Widget articleList() {
+  Widget header() {
+    return Column(
+      children: [
+        SizedBox(height: 20),
+        Align(
+            alignment: Alignment.center,
+            child: TextButton(
+              child: ClipRRect(
+                child: _user.photo == null || _user.photo.isEmpty
+                    ? Icon(Icons.face, size: 100)
+                    : Image.memory(
+                        base64Decode(_user.photo),
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.cover,
+                      ),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              onPressed: _owner == true ? changeImage : null,
+            )),
+        SizedBox(height: 20),
+        Align(
+          alignment: Alignment.center,
+          child: Text(
+            "${_user.firstName} ${_user.lastName}",
+            style: TextStyle(
+              fontSize: 24,
+            ),
+          ),
+        ),
+        SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget customList() {
     if (_user == null) {
       if (_loading) {
         return Center(
@@ -183,125 +209,130 @@ class _ProfilePageState extends State<ProfilePage> {
         ));
       } else if (_error) {
         return Center(
-            child: InkWell(
-          onTap: () {
-            setState(() {
-              _loading = true;
-              _error = false;
-              getUser();
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text("Error while loading user, tap to try again"),
+          child: InkWell(
+            onTap: () {
+              setState(
+                () {
+                  _loading = true;
+                  _error = false;
+                  getUser();
+                },
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text("Error while loading user, tap to try again"),
+            ),
           ),
-        ));
+        );
       }
-    } else {
-      return ListView.builder(
-        itemCount: _user.articles.length,
-        itemBuilder: (context, index) {
-          final Article article = _user.articles[index];
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5.0),
-              side: BorderSide(
-                color: Colors.grey,
-                width: 0.4,
+    }
+    return ListView.builder(
+      itemCount: _user.articles.length,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return header();
+        }
+        return articleCard(_user.articles[index]);
+      },
+    );
+  }
+
+  Widget articleCard(Article article) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(5.0),
+        side: BorderSide(
+          color: Colors.grey,
+          width: 0.4,
+        ),
+      ),
+      margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            child: TextButton(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => DetailedArticlePage(
+                      id: article.id,
+                    ),
+                  ),
+                );
+              },
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "${article.title}",
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 24,
+                  ),
+                ),
               ),
             ),
-            margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
+            width: MediaQuery.of(context).size.width - 50,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  child: TextButton(
-                    onPressed: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => DetailedArticlePage(
-                            id: article.id,
-                          ),
-                        ),
-                      );
-                    },
-                    style: ButtonStyle(
-                      foregroundColor:
-                          MaterialStateProperty.all<Color>(Colors.black),
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "${article.title}",
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                  width: MediaQuery.of(context).size.width - 50,
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
-                  child: Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Categories(article),
-                          _owner
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context)
-                                            .push(
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    InsertArticlePage(
-                                                  id: article.id,
-                                                ),
-                                              ),
-                                            )
-                                            .then(
-                                              (value) => getUser(),
-                                            );
-                                      },
-                                      child: Icon(
-                                        Icons.edit,
-                                        size: 40.0,
+              children: [
+                Categories(article),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _owner == true
+                        ? TextButton(
+                            onPressed: () {
+                              Navigator.of(context)
+                                  .push(
+                                    MaterialPageRoute(
+                                      builder: (context) => InsertArticlePage(
+                                        id: article.id,
                                       ),
                                     ),
-                                    TextButton(
-                                      onPressed: () {
-                                        deleteArticle(article.id);
-                                      },
-                                      child: Icon(
-                                        Icons.delete_forever,
-                                        size: 40.0,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Container()
-                        ],
-                      ),
-                      Spacer(),
-                      LikeWidget(
-                        id: article.id,
-                        liked: article.liked,
-                        likeCount: article.likeCount,
-                      )
-                    ],
-                  ),
+                                  )
+                                  .then(
+                                    (value) => getUser(),
+                                  );
+                            },
+                            child: Icon(
+                              Icons.edit,
+                              size: 40.0,
+                            ),
+                          )
+                        : Container(),
+                    _owner == true
+                        ? TextButton(
+                            onPressed: () {
+                              deleteArticle(article.id);
+                            },
+                            child: Icon(
+                              Icons.delete_forever,
+                              size: 40.0,
+                            ),
+                          )
+                        : Container(),
+                    Spacer(),
+                    LikeWidget(
+                      id: article.id,
+                      liked: article.liked,
+                      likeCount: article.likeCount,
+                    )
+                  ],
                 )
               ],
             ),
-          );
-        },
-      );
-    }
+          )
+        ],
+      ),
+    );
   }
 }
