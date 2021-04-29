@@ -142,4 +142,13 @@ class Api extends ChangeNotifier {
     return http.put(Uri.http('${env['HOST']}:${env['PORT']}', '/article/$id'),
         headers: headers, body: jsonEncode(body));
   }
+
+  Future<http.Response> uploadPhoto(String photo) async {
+    var headers = {
+      HttpHeaders.authorizationHeader: "Bearer ${Auth().getAccessToken()}"
+    };
+
+    return http.put(Uri.http('${env['HOST']}:${env['PORT']}', 'user/set_photo'),
+        headers: headers, body: jsonEncode(photo));
+  }
 }

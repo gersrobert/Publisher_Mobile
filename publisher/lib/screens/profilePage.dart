@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,11 +36,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _error = false;
     _loading = true;
     _owner = false;
-    _image = null;
     _user = AppUser('', 'Firstname', 'Lastname', '', []);
     getUser();
-
-    getImage();
   }
 
   void getUser() async {
@@ -119,12 +117,15 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void getImage() async {
+  void changeImage() async {
     File image = await ImagePicker.pickImage(
         source: ImageSource.camera, imageQuality: 50);
 
     if (image != null) {
       String bytes = base64Encode(image.readAsBytesSync());
+
+      var response = await Api().uploadPhoto(bytes);
+      log(response.statusCode);
 
       setState(() {
         _image = bytes;
@@ -144,17 +145,20 @@ class _ProfilePageState extends State<ProfilePage> {
             SizedBox(height: 20),
             Align(
               alignment: Alignment.center,
-              child: ClipRRect(
-                child: _image == null
-                    ? SizedBox(height: 0)
-                    : Image.memory(
-                        base64Decode(_image),
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit.cover,
-                      ),
-                borderRadius: BorderRadius.circular(50),
-              ),
+              child: TextButton(
+                child: ClipRRect(
+                  child: _image == null
+                      ? Icon(Icons.face, size: 100)
+                      : Image.memory(
+                    base64Decode(_image),
+                    height: 100,
+                    width: 100,
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                onPressed: _owner == true ? changeImage : null,
+              )
             ),
             SizedBox(height: 20),
             Align(
