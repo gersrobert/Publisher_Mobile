@@ -10,9 +10,10 @@ class AppUser extends Abstract {
   String lastName;
   String userName;
   List<Article> articles;
+  String photo;
 
   AppUser(
-      String id, this.firstName, this.lastName, this.userName, this.articles)
+      String id, this.firstName, this.lastName, this.userName, this.articles, this.photo)
       : super(id);
 
   factory AppUser.fromJson(Map<String, dynamic> json) =>

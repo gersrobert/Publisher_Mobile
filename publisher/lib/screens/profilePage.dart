@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,7 +28,6 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading;
   AppUser _user;
   bool _owner;
-  String _image;
 
   @override
   void initState() {
@@ -36,7 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _error = false;
     _loading = true;
     _owner = false;
-    _user = AppUser('', 'Firstname', 'Lastname', '', []);
+    _user = AppUser('', 'Firstname', 'Lastname', '', [], '');
     getUser();
   }
 
@@ -125,11 +124,7 @@ class _ProfilePageState extends State<ProfilePage> {
       String bytes = base64Encode(image.readAsBytesSync());
 
       var response = await Api().uploadPhoto(bytes);
-      log(response.statusCode);
-
-      setState(() {
-        _image = bytes;
-      });
+      getUser();
     }
   }
 
@@ -147,10 +142,10 @@ class _ProfilePageState extends State<ProfilePage> {
               alignment: Alignment.center,
               child: TextButton(
                 child: ClipRRect(
-                  child: _image == null
+                  child: _user.photo == null || _user.photo.isEmpty
                       ? Icon(Icons.face, size: 100)
                       : Image.memory(
-                    base64Decode(_image),
+                    base64Decode(_user.photo),
                     height: 100,
                     width: 100,
                     fit: BoxFit.cover,

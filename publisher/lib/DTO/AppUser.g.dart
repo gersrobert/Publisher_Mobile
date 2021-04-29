@@ -16,6 +16,7 @@ AppUser _$AppUserFromJson(Map<String, dynamic> json) {
         ?.map((e) =>
             e == null ? null : Article.fromJson(e as Map<String, dynamic>))
         ?.toList(),
+    json['photo'] as String,
   );
 }
 
