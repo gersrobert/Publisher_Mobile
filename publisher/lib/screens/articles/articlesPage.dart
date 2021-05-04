@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:publisher/DTO/Article.dart';
 import 'package:publisher/DTO/Articles.dart';
 import 'package:publisher/components/categories.dart';
+import 'package:publisher/offline/sync.dart';
 import 'package:publisher/screens/articles/components/customAppBar.dart';
 import 'package:publisher/screens/articles/components/describeArticle.dart';
 import 'package:publisher/screens/articles/components/authorAndDate.dart';
@@ -59,10 +61,11 @@ class _ArticlesPageState extends State<ArticlesPage> {
   }
 
   void getArticles() async {
-    if (_totalPages != 0 && _pageNumber > _totalPages) {
+    if ((_totalPages != 0 && _pageNumber > _totalPages) || !_hasMore) {
       return;
     }
 
+    Articles articles;
     try {
       var response = await Api().getArticles(
         _pageNumber,
@@ -75,15 +78,31 @@ class _ArticlesPageState extends State<ArticlesPage> {
         throw Exception('Invalid response code');
       }
 
-      Articles fetchedArticles = Articles.fromJson(
+      articles = Articles.fromJson(
           jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
 
       setState(() {
-        _hasMore = fetchedArticles.content.length == _defaultPhotosPerPageCount;
+        _hasMore = articles.content.length == _defaultPhotosPerPageCount;
         _loading = false;
         _pageNumber += 1;
-        _totalPages = fetchedArticles.totalPages;
-        _articles.addAll(fetchedArticles.content);
+        _totalPages = articles.totalPages;
+        _articles.addAll(articles.content);
+      });
+
+      if (_pageNumber == 1) {
+        OfflineSync().saveArticles(articles);
+      }
+    } on SocketException {
+      articles = Articles.fromJson(await OfflineSync().readArticles());
+
+      if (articles == null) {
+        throw Exception('No preloaded articles');
+      }
+      setState(() {
+        _hasMore = false;
+        _loading = false;
+        _totalPages = 1;
+        _articles.addAll(articles.content);
       });
     } catch (e) {
       setState(() {

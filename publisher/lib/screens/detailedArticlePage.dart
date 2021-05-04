@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
@@ -7,6 +8,7 @@ import 'package:publisher/DTO/DetailedArticle.dart';
 import 'package:publisher/api/api.dart';
 import 'package:publisher/components/customAppBar.dart';
 import 'package:publisher/components/likeWidget.dart';
+import 'package:publisher/offline/sync.dart';
 import 'package:publisher/screens/articles/articlesPage.dart';
 import 'package:publisher/screens/profilePage.dart';
 
@@ -58,8 +60,16 @@ class _DetailedArticlePageState extends State<DetailedArticlePage> {
         _loading = false;
         _article = DetailedArticle.fromJson(
             jsonDecode(Utf8Decoder().convert(response.body.codeUnits)));
+      });
+    } on SocketException {
+      var articleMap = await OfflineSync().readArticle(widget.id);
 
-        log(_article.content);
+      if (articleMap == '') {
+        throw Exception('Article not present in offline storage');
+      }
+      setState(() {
+        _loading = false;
+        _article = DetailedArticle.fromJson(articleMap);
       });
     } catch (e) {
       setState(() {

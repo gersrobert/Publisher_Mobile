@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -40,7 +39,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void getUser() async {
-    print(Auth().getIdToken());
     if (widget.userId.isEmpty) {
       if (!Auth().getLoginStatus()) {
         throw Exception('invalid user');

@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publisher/auth/auth.dart';
 import 'package:http/http.dart' as http;
 
-class Api extends ChangeNotifier {
+class Api {
   Api._privateConstructor() {}
 
   static final Api _instance = Api._privateConstructor();

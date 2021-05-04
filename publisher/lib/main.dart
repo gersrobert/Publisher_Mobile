@@ -25,11 +25,7 @@ class App extends StatelessWidget {
         ),
         initialRoute: '/articles',
         routes: {
-          '/articles': (context) => ArticlesPage(
-              // author: 'branisa6',
-              // category: 'test2',
-              // title: 'clanok',
-              ),
+          '/articles': (context) => ArticlesPage(),
           '/profile': (context) => ProfilePage(),
           '/insert': (context) => InsertArticlePage(),
         },

@@ -56,6 +56,9 @@ class Auth extends ChangeNotifier {
       this._idToken = parseIdToken(response.idToken);
       this._refreshToken = response.refreshToken;
 
+      log('${response.accessToken}');
+      log('${response.refreshToken}');
+
       _secureStorage.write(key: 'refresh_token', value: response.refreshToken);
       notifyListeners();
     } catch (e, s) {
