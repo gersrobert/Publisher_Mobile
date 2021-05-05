@@ -35,7 +35,7 @@ class PAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: <Widget>[
         Consumer<Auth>(
           builder: (context, auth, child) {
-            var _options = {'Filter', 'Login'};
+            var _options = {'Filter', 'Add article', 'Login'};
             if (auth.getLoginStatus()) {
               _options = {'Filter', 'Add article', 'Profile', 'Logout'};
             }

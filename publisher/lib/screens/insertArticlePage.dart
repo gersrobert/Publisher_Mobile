@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:publisher/DTO/ArticleInsert.dart';
 import 'package:publisher/DTO/DetailedArticle.dart';
 import 'package:publisher/api/api.dart';
 import 'package:publisher/components/customAppBar.dart';
+import 'package:publisher/offline/sync.dart';
 
 class InsertArticlePage extends StatefulWidget {
   final String id;
@@ -191,13 +194,27 @@ class _InsertArticlePage extends State<InsertArticlePage> {
 
   Future<void> submitForm() async {
     if (_formKey.currentState.validate()) {
-      var response;
+      var request;
       if (widget.id == null) {
-        response = await Api().addArticle(
+        request = Api().addArticle(
             _titleController.text, _contentController.text, _categories);
       } else {
-        response = await Api().updateArticle(widget.id, _titleController.text,
+        request = Api().updateArticle(widget.id, _titleController.text,
             _contentController.text, _categories);
+      }
+
+      var response;
+      try {
+        response = await request;
+      } on SocketException {
+        OfflineSync().addArticle(ArticleInsert(_titleController.text, _contentController.text, _categories, widget.id));
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              "Your article will be saved once a network connection can be established"),
+        ));
+        Navigator.maybePop(context);
+        return;
       }
 
       if (response.statusCode == 200) {

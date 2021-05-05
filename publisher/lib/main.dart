@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:publisher/auth/auth.dart';
+import 'package:publisher/offline/sync.dart';
 import 'package:publisher/screens/articles/articlesPage.dart';
 import 'package:publisher/screens/insertArticlePage.dart';
 import 'package:publisher/screens/profilePage.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart' as DotEnv;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DotEnv.load();
+  OfflineSync().initialize();
   runApp(App());
 }
 
